@@ -2,13 +2,17 @@
 
 Les modèles de requête exposent `to_json()` ; les modèles de réponse exposent
 `from_json()`, qui valide la forme reçue et lève `ResponseFormatError`.
+`FramePayload` (et `Detection`) exposent les deux, pour être rejoués depuis l'outbox.
 """
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from welleat_api_sdk._json import as_bool, as_int, as_list, as_object, as_str
+from welleat_api_sdk._json import as_bool, as_float, as_int, as_list, as_object, as_str
+from welleat_api_sdk.errors import ResponseFormatError
 from welleat_api_sdk.request import JsonValue
+
+_BBOX_SIZE = 4
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,6 +46,35 @@ class Detection:
             data["track_id"] = self.track_id
         return data
 
+    @classmethod
+    def from_json(cls, value: object) -> "Detection":
+        """Relit une détection sérialisée par `to_json`.
+
+        Args:
+            value: Objet `{label, confidence, bbox, track_id?}`.
+
+        Returns:
+            La détection.
+
+        Raises:
+            ResponseFormatError: Si `bbox` n'a pas 4 nombres ou `track_id` un type invalide.
+        """
+        data = as_object(value, "Detection")
+        bbox = [
+            as_float(n, "Detection.bbox[]") for n in as_list(data.get("bbox"), "Detection.bbox")
+        ]
+        if len(bbox) != _BBOX_SIZE:
+            raise ResponseFormatError("Detection.bbox : 4 nombres attendus")
+        track_id = data.get("track_id")
+        if isinstance(track_id, bool) or not isinstance(track_id, int | str | None):
+            raise ResponseFormatError("Detection.track_id : entier ou chaîne attendu")
+        return cls(
+            label=as_str(data.get("label"), "Detection.label"),
+            confidence=as_float(data.get("confidence"), "Detection.confidence"),
+            bbox=(bbox[0], bbox[1], bbox[2], bbox[3]),
+            track_id=track_id,
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class FramePayload:
@@ -73,6 +106,26 @@ class FramePayload:
         if self.tray_id is not None:
             data["tray_id"] = self.tray_id
         return data
+
+    @classmethod
+    def from_json(cls, value: object) -> "FramePayload":
+        """Relit une image sérialisée par `to_json` (rejeu depuis l'outbox).
+
+        Args:
+            value: Objet `{image, image_name, detections, tray_id?}`.
+
+        Returns:
+            L'image.
+        """
+        data = as_object(value, "FramePayload")
+        detections = as_list(data.get("detections", []), "FramePayload.detections")
+        tray_id = data.get("tray_id")
+        return cls(
+            image=as_str(data.get("image"), "FramePayload.image"),
+            image_name=as_str(data.get("image_name"), "FramePayload.image_name"),
+            detections=tuple(Detection.from_json(item) for item in detections),
+            tray_id=None if tray_id is None else as_str(tray_id, "FramePayload.tray_id"),
+        )
 
 
 @dataclass(frozen=True, slots=True)
