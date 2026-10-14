@@ -9,6 +9,7 @@ from welleat_api_sdk import gateway_requests as req
 from welleat_api_sdk.auth import EnrollmentSecrets, GatewayCredentials
 from welleat_api_sdk.client import SyncWelleatClient, WelleatClient
 from welleat_api_sdk.models import (
+    DeviceId,
     DeviceInfo,
     PlugConfig,
     ScaleRegistration,
@@ -130,22 +131,22 @@ class GatewayClient(WelleatClient[GatewayCredentials]):
         """
         return await self.request(req.plug_list())
 
-    async def plug_status(self, api_plug_id: str, status: bool) -> None:
+    async def plug_status(self, api_plug_id: DeviceId, status: bool) -> None:
         """Remonte l'état d'une prise.
 
         Args:
-            api_plug_id: Identifiant de prise.
+            api_plug_id: Identifiant de prise (entier ou chaîne), tel que reçu de `plugList`.
             status: `True` si allumée.
         """
         await self.request(req.plug_status(api_plug_id, status))
 
     async def plug_consumption(
-        self, api_plug_id: str, power: float, energy: float, current: float
+        self, api_plug_id: DeviceId, power: float, energy: float, current: float
     ) -> None:
         """Remonte la consommation d'une prise.
 
         Args:
-            api_plug_id: Identifiant de prise.
+            api_plug_id: Identifiant de prise (entier ou chaîne), tel que reçu de `plugList`.
             power: Puissance instantanée.
             energy: Énergie cumulée.
             current: Courant.
@@ -259,22 +260,22 @@ class SyncGatewayClient(SyncWelleatClient[GatewayCredentials]):
         """
         return self.request(req.plug_list())
 
-    def plug_status(self, api_plug_id: str, status: bool) -> None:
+    def plug_status(self, api_plug_id: DeviceId, status: bool) -> None:
         """Remonte l'état d'une prise ; voir `GatewayClient.plug_status`.
 
         Args:
-            api_plug_id: Identifiant de prise.
+            api_plug_id: Identifiant de prise (entier ou chaîne), tel que reçu de `plugList`.
             status: `True` si allumée.
         """
         self.request(req.plug_status(api_plug_id, status))
 
     def plug_consumption(
-        self, api_plug_id: str, power: float, energy: float, current: float
+        self, api_plug_id: DeviceId, power: float, energy: float, current: float
     ) -> None:
         """Remonte la consommation d'une prise ; voir `GatewayClient.plug_consumption`.
 
         Args:
-            api_plug_id: Identifiant de prise.
+            api_plug_id: Identifiant de prise (entier ou chaîne), tel que reçu de `plugList`.
             power: Puissance instantanée.
             energy: Énergie cumulée.
             current: Courant.

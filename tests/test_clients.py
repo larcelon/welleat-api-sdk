@@ -256,6 +256,27 @@ def test_plug_calls_use_put_with_key_in_header_and_body() -> None:
     assert rec.last.url.raw_path.decode() == "/api/stations/plugConsumption/st-1"
 
 
+def test_plug_calls_keep_integer_plug_ids() -> None:
+    rec = Recorder()
+    gateway(rec).plug_status(12, False)
+    assert rec.body()["apiPlugId"] == 12
+    gateway(rec).plug_consumption(12, 1.0, 2.0, 3.0)
+    assert rec.body()["apiPlugId"] == 12
+
+
+@pytest.mark.parametrize(
+    ("plug_id", "valid"), [(12, True), ("p-1", True), (True, False), ("", False)]
+)
+def test_plug_list_keeps_plug_id_type(plug_id: object, valid: bool) -> None:
+    plug = {"apiPlugId": plug_id, "ipAddress": "10.0.0.5", "name": "n", "stationPlug": True}
+    rec = Recorder(httpx.Response(200, json=[plug]))
+    if valid:
+        assert gateway(rec).plug_list()[0].api_plug_id == plug_id
+    else:
+        with pytest.raises(ResponseFormatError):
+            gateway(rec).plug_list()
+
+
 @pytest.mark.parametrize(
     "response",
     [
