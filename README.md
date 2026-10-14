@@ -3,6 +3,32 @@
 SDK Python de l'API Welleat, issu de la rétro-ingénierie de `camera-soft`
 (voir `SOMMAIRE_API_WELLEAT.md`).
 
+## Installation
+
+Le SDK n'est pas publié sur PyPI : on l'installe depuis ce dépôt Git, épinglé sur un tag.
+
+```bash
+uv add "welleat-api-sdk @ git+https://github.com/larcelon/welleat-api-sdk.git" --tag v0.1.0
+# avec le canal temps réel (Socket.IO) :
+uv add "welleat-api-sdk[realtime] @ git+https://github.com/larcelon/welleat-api-sdk.git" --tag v0.1.0
+```
+
+ce qui écrit dans le `pyproject.toml` du projet :
+
+```toml
+[project]
+dependencies = ["welleat-api-sdk[realtime]"]
+
+[tool.uv.sources]
+welleat-api-sdk = { git = "https://github.com/larcelon/welleat-api-sdk.git", tag = "v0.1.0" }
+```
+
+- Sans uv : `"welleat-api-sdk[realtime] @ git+https://github.com/larcelon/welleat-api-sdk.git@v0.1.0"`
+  dans `dependencies`.
+- Dépôt privé : `git+ssh://git@github.com/larcelon/welleat-api-sdk.git` avec une clé de
+  déploiement ; ne jamais écrire de jeton dans le `pyproject.toml`.
+- Développement simultané : `welleat-api-sdk = { path = "../welleat-api-sdk", editable = true }`.
+
 ```python
 from welleat_api_sdk import CameraClient, CameraCredentials, ClientConfig, Environment
 
@@ -46,7 +72,7 @@ outbox.retry_due(send)  # périodes creuses
 
 ## Temps réel (Socket.IO)
 
-Installer l'extra : `pip install "welleat-api-sdk[realtime]"`.
+Nécessite l'extra `realtime` (voir Installation).
 
 ```python
 from welleat_api_sdk import ClientConfig, GatewayCredentials
