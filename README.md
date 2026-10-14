@@ -23,6 +23,33 @@ async with CameraClient(
 | `camera_requests`, `gateway_requests` | constructeurs de `Request`, un par endpoint |
 | `cameras`, `gateways` | `CameraClient`, `GatewayClient` et variantes `Sync*` |
 | `models`, `errors` | dataclasses frozen avec parsing validé ; hiérarchie `WelleatError` |
+| `realtime` | canal Socket.IO (extra `realtime`) : `CameraSocket`, `GatewaySocket` et variantes `Sync*`, `ReconnectPolicy`, événements typés |
+
+## Temps réel (Socket.IO)
+
+Installer l'extra : `pip install "welleat-api-sdk[realtime]"`.
+
+```python
+from welleat_api_sdk import ClientConfig, GatewayCredentials
+from welleat_api_sdk.realtime import GatewaySocket, ScaleCommand
+
+socket = GatewaySocket(GatewayCredentials("station", "clé"), ClientConfig())
+
+
+async def on_command(command: ScaleCommand) -> None: ...
+
+
+async def restart_service() -> None: ...
+
+
+socket.on_scale_command(on_command)
+socket.on_give_up(restart_service)  # 6 échecs consécutifs par défaut
+await socket.run()  # reconnecte selon la ReconnectPolicy jusqu'à stop()
+```
+
+Le SDK décode les charges utiles (objet ou chaîne JSON), distingue accusés de poids et retours de
+commande, et reconnecte ; le suivi de livraison des poids et le redémarrage du service restent à
+l'appelant, via les hooks `on_connect`, `on_disconnect`, `on_connect_error` et `on_give_up`.
 
 ## Principes
 
@@ -32,4 +59,4 @@ async with CameraClient(
 
 ## Hors périmètre de cette base
 
-Socket.IO (`realtime`), outbox, bornes/RFID (`api-local.mdev.fr`), export quotidien (contrat non défini).
+Outbox, bornes/RFID (`api-local.mdev.fr`), export quotidien (contrat non défini).
