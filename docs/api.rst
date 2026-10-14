@@ -57,6 +57,25 @@ Outbox
    :members:
 
 .. automodule:: welleat_api_sdk.outbox.tray_counts
+
+Temps réel (Socket.IO)
+----------------------
+
+.. automodule:: welleat_api_sdk.realtime
+
+.. automodule:: welleat_api_sdk.realtime.client
+   :members:
+
+.. automodule:: welleat_api_sdk.realtime.cameras
+   :members:
+
+.. automodule:: welleat_api_sdk.realtime.gateways
+   :members:
+
+.. automodule:: welleat_api_sdk.realtime.events
+   :members:
+
+.. automodule:: welleat_api_sdk.realtime.transport
    :members:
 
 Erreurs

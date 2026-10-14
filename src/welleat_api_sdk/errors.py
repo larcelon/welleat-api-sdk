@@ -21,6 +21,10 @@ class NetworkError(RetryableError):
     """Échec de transport (connexion, délai dépassé, réponse tronquée)."""
 
 
+class RealtimeConnectionError(NetworkError):
+    """Canal temps réel (Socket.IO) indisponible : connexion refusée, échouée ou perdue."""
+
+
 class ApiError(WelleatError):
     """Statut HTTP non accepté par l'endpoint, ou réponse métier invalide.
 
