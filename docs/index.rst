@@ -5,3 +5,5 @@ Module Python servant de wrapper à l'API Welleat. Elle est utile à l'implémen
 
 .. toctree::
    :maxdepth: 2
+
+   api

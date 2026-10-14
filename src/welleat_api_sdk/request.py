@@ -8,6 +8,7 @@ from welleat_api_sdk.auth import AuthMode
 from welleat_api_sdk.config import Timeouts
 from welleat_api_sdk.errors import ResponseFormatError
 
+#: Valeur JSON quelconque, telle que produite par `json.loads`.
 type JsonValue = str | int | float | bool | list[JsonValue] | dict[str, JsonValue] | None
 
 OK_STATUSES = frozenset({200, 201})

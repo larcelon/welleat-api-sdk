@@ -20,3 +20,12 @@ napoleon_use_ivar = True
 autodoc_typehints = "description"
 nitpicky = True
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+default_role = "literal"
+nitpick_ignore = [
+    # Paramètres de type PEP 695 (`class WelleatClient[C: Credentials]`), sans cible documentable.
+    ("py:class", "C"),
+    ("py:class", "T"),
+    # httpx ne publie pas d'inventaire Sphinx (documentation MkDocs).
+    ("py:class", "httpx.Client"),
+    ("py:class", "httpx.AsyncClient"),
+]

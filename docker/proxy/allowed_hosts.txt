@@ -12,3 +12,4 @@ files.pythonhosted.org
 
 # Décommentez pour git clone/push ou pour l'installation de paquets depuis GitHub
 # .github.com
+docs.python.org

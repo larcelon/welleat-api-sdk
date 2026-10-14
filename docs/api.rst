@@ -1,0 +1,50 @@
+Référence de l'API
+==================
+
+.. automodule:: welleat_api_sdk
+
+Clients
+-------
+
+.. automodule:: welleat_api_sdk.client
+   :members:
+
+.. automodule:: welleat_api_sdk.cameras
+   :members:
+
+.. automodule:: welleat_api_sdk.gateways
+   :members:
+
+Configuration et authentification
+---------------------------------
+
+.. automodule:: welleat_api_sdk.config
+   :members:
+
+.. automodule:: welleat_api_sdk.auth
+   :members:
+
+Modèles
+-------
+
+.. automodule:: welleat_api_sdk.models
+   :members:
+
+Requêtes
+--------
+
+.. automodule:: welleat_api_sdk.request
+   :members:
+
+.. automodule:: welleat_api_sdk.camera_requests
+   :members:
+
+.. automodule:: welleat_api_sdk.gateway_requests
+   :members:
+
+Erreurs
+-------
+
+.. automodule:: welleat_api_sdk.errors
+   :members:
+   :show-inheritance:
