@@ -8,13 +8,21 @@ Les modèles de requête exposent `to_json()` ; les modèles de réponse exposen
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from welleat_api_sdk._json import as_bool, as_device_id, as_int, as_list, as_object, as_str
+from welleat_api_sdk._json import (
+    as_bool,
+    as_device_id,
+    as_float,
+    as_int,
+    as_list,
+    as_object,
+    as_str,
+)
 from welleat_api_sdk.errors import ResponseFormatError
-
 from welleat_api_sdk.request import JsonValue
 
-"""Identifiant à type mixte côté back-end (`apiPlugId`...), renvoyé tel que reçu."""
 type DeviceId = str | int
+"""Identifiant à type mixte côté back-end (`apiPlugId`...), renvoyé tel que reçu."""
+
 _BBOX_SIZE = 4
 
 

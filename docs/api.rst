@@ -57,6 +57,7 @@ Outbox
    :members:
 
 .. automodule:: welleat_api_sdk.outbox.tray_counts
+   :members:
 
 Temps réel (Socket.IO)
 ----------------------
