@@ -42,6 +42,23 @@ Requêtes
 .. automodule:: welleat_api_sdk.gateway_requests
    :members:
 
+Outbox
+------
+
+.. automodule:: welleat_api_sdk.outbox
+
+.. automodule:: welleat_api_sdk.outbox.runner
+   :members:
+
+.. automodule:: welleat_api_sdk.outbox.policy
+   :members:
+
+.. automodule:: welleat_api_sdk.outbox.store
+   :members:
+
+.. automodule:: welleat_api_sdk.outbox.tray_counts
+   :members:
+
 Erreurs
 -------
 

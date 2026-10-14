@@ -23,13 +23,31 @@ async with CameraClient(
 | `camera_requests`, `gateway_requests` | constructeurs de `Request`, un par endpoint |
 | `cameras`, `gateways` | `CameraClient`, `GatewayClient` et variantes `Sync*` |
 | `models`, `errors` | dataclasses frozen avec parsing validé ; hiérarchie `WelleatError` |
+| `outbox` | `Outbox` / `SyncOutbox` (file durable des envois en échec, format camera-soft `schema_version: 2`), `OutboxPolicy`, `DailyTrayCounter` |
+
+## Outbox
+
+```python
+from welleat_api_sdk.models import FramePayload
+from welleat_api_sdk.outbox import SyncOutbox
+
+outbox = SyncOutbox("/var/lib/welleat/outbox")  # retry 20 min, péremption 7 j, blackout 10:30-15:00
+
+
+def send(payload: dict) -> None:
+    cam.send_frame(FramePayload.from_json(payload))
+
+
+outbox.deliver(frame.to_json(), send)  # en file si échec ; 1 rejeu tous les 10 succès
+outbox.retry_due(send)  # périodes creuses
+```
 
 ## Principes
 
-- Le client lève, ne réessaie jamais (`RetryableError` signale les erreurs rejouables) ; l'outbox est hors SDK.
+- Le client lève, ne réessaie jamais (`RetryableError` signale les erreurs rejouables) ; l'outbox optionnelle (`outbox`) replanifie.
 - Aucun secret ni fichier lu/écrit : l'enrôlement renvoie les credentials, l'appelant les stocke.
 - Les chemins conservent la casse du back-end (`temptracking`, `Reports`, `StateUpdate`...).
 
 ## Hors périmètre de cette base
 
-Socket.IO (`realtime`), outbox, bornes/RFID (`api-local.mdev.fr`), export quotidien (contrat non défini).
+Socket.IO (`realtime`), bornes/RFID (`api-local.mdev.fr`), export quotidien (contrat non défini).
