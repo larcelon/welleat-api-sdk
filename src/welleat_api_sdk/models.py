@@ -7,8 +7,11 @@ Les modèles de requête exposent `to_json()` ; les modèles de réponse exposen
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from welleat_api_sdk._json import as_bool, as_int, as_list, as_object, as_str
+from welleat_api_sdk._json import as_bool, as_device_id, as_int, as_list, as_object, as_str
 from welleat_api_sdk.request import JsonValue
+
+type DeviceId = str | int
+"""Identifiant à type mixte côté back-end (`apiPlugId`...), renvoyé tel que reçu."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -269,14 +272,14 @@ class PlugConfig:
     """Prise connectée (Tasmota) rattachée à une station.
 
     Attributes:
-        api_plug_id: Identifiant de prise.
+        api_plug_id: Identifiant de prise, entier ou chaîne tel que reçu.
         ip_address: Adresse IP de la prise.
         name: Nom de la prise.
         station_plug: Prise propre à la station.
         programmings: Programmations ; seule la première est exploitée aujourd'hui.
     """
 
-    api_plug_id: str
+    api_plug_id: DeviceId
     ip_address: str
     name: str
     station_plug: bool
@@ -303,7 +306,7 @@ class PlugConfig:
             )
         )
         return cls(
-            api_plug_id=as_str(data.get("apiPlugId"), "PlugConfig.apiPlugId"),
+            api_plug_id=as_device_id(data.get("apiPlugId"), "PlugConfig.apiPlugId"),
             ip_address=as_str(data.get("ipAddress"), "PlugConfig.ipAddress"),
             name=as_str(data.get("name"), "PlugConfig.name"),
             station_plug=as_bool(data.get("stationPlug"), "PlugConfig.stationPlug"),

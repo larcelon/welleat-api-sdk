@@ -14,6 +14,7 @@ from welleat_api_sdk.camera_requests import enrollment_headers
 from welleat_api_sdk.config import Timeouts
 from welleat_api_sdk.errors import ResponseFormatError
 from welleat_api_sdk.models import (
+    DeviceId,
     DeviceInfo,
     PlugConfig,
     ScaleRegistration,
@@ -270,11 +271,11 @@ def plug_list() -> Request[list[PlugConfig]]:
     return Request("GET", "stations/plugList/{identity}", parse, AuthMode.KEY_HEADER)
 
 
-def plug_status(api_plug_id: str, status: bool) -> Request[None]:
+def plug_status(api_plug_id: DeviceId, status: bool) -> Request[None]:
     """Remonte l'état d'une prise (`PUT stations/plugStatus/{id}`).
 
     Args:
-        api_plug_id: Identifiant de prise.
+        api_plug_id: Identifiant de prise (entier ou chaîne), tel que reçu de `plugList`.
         status: `True` si allumée.
 
     Returns:
@@ -292,12 +293,12 @@ def plug_status(api_plug_id: str, status: bool) -> Request[None]:
 
 
 def plug_consumption(
-    api_plug_id: str, power: float, energy: float, current: float
+    api_plug_id: DeviceId, power: float, energy: float, current: float
 ) -> Request[None]:
     """Remonte la consommation d'une prise (`PUT stations/plugConsumption/{id}`).
 
     Args:
-        api_plug_id: Identifiant de prise.
+        api_plug_id: Identifiant de prise (entier ou chaîne), tel que reçu de `plugList`.
         power: Puissance instantanée.
         energy: Énergie cumulée.
         current: Courant.

@@ -57,6 +57,26 @@ def as_str(value: object, what: str) -> str:
     return value
 
 
+def as_device_id(value: object, what: str) -> str | int:
+    """Exige un identifiant à type mixte : entier ou chaîne non vide, conservé tel quel.
+
+    Args:
+        value: Valeur décodée.
+        what: Description de la valeur, pour le message d'erreur.
+
+    Returns:
+        L'identifiant, sans conversion.
+
+    Raises:
+        ResponseFormatError: Si `value` n'est ni un entier (hors booléen) ni une chaîne non vide.
+    """
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value:
+        return value
+    raise ResponseFormatError(f"{what} : entier ou chaîne non vide attendu")
+
+
 def as_int(value: object, what: str) -> int:
     """Exige un entier, ou une chaîne décimale ; les booléens sont refusés.
 
