@@ -1,0 +1,50 @@
+"""Exceptions levées par le SDK.
+
+Le client lève, il ne réessaie jamais : la replanification (outbox) est à la
+charge de l'appelant, qui peut se baser sur `RetryableError`.
+"""
+
+
+class WelleatError(Exception):
+    """Racine de toutes les erreurs du SDK."""
+
+
+class NotEnrolledError(WelleatError):
+    """Un appel authentifié a été tenté sans identifiants d'appareil."""
+
+
+class RetryableError(WelleatError):
+    """Erreur transitoire : l'appel peut être rejoué plus tard."""
+
+
+class NetworkError(RetryableError):
+    """Échec de transport (connexion, délai dépassé, réponse tronquée)."""
+
+
+class ApiError(WelleatError):
+    """Statut HTTP non accepté par l'endpoint, ou réponse métier invalide.
+
+    Attributes:
+        status: Statut HTTP reçu.
+        body: Corps de la réponse en texte brut.
+    """
+
+    def __init__(self, status: int, body: str, message: str | None = None) -> None:
+        """Initialise l'erreur.
+
+        Args:
+            status: Statut HTTP reçu.
+            body: Corps de la réponse en texte brut.
+            message: Message explicatif ; par défaut, statut et corps.
+        """
+        super().__init__(message or f"HTTP {status} : {body}")
+        self.status = status
+        self.body = body
+
+
+class ServerError(ApiError, RetryableError):
+    """Réponse 5xx, 408 ou 429 : l'appel peut être rejoué plus tard."""
+
+
+class ResponseFormatError(WelleatError):
+    """La réponse du serveur n'a pas la forme attendue."""

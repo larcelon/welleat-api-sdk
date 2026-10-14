@@ -1,0 +1,14 @@
+# Hôtes joignables depuis l'agent et le juge (un par ligne, "." devant = sous-domaines inclus).
+# Modifier ce fichier puis : docker compose restart proxy
+
+# Claude Code (API et authentification)
+.anthropic.com
+.claude.ai
+.claude.com
+
+# Dépendances Python (uv)
+pypi.org
+files.pythonhosted.org
+
+# Décommentez pour git clone/push ou pour l'installation de paquets depuis GitHub
+# .github.com

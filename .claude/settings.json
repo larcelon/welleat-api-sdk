@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(/.pre-commit-config.yaml)",
+      "Edit(/poe_tasks.toml)",
+      "Edit(/.claude/settings.json)",
+      "Edit(/.claude/hooks/**)",
+      "Edit(/scripts/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-hook-bypass.py\" || exit 2" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+[project]
+name = "welleat-api-sdk"
+version = "0.1.0"
+description = "Module Python servant de wrapper à l'API Welleat. Elle est utile à l'implémentation des applications de la flotte IoT."
+authors = [
+    { name = "Louis A.", email = "larcelon@proton.me" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "detect-secrets>=1.5.0",
+    "mypy>=2.4.0",
+    "pip-audit>=2.10.1",
+    "poethepoet>=0.48.0",
+    "pre-commit>=4.7.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.16.0",
+    "ruff>=0.17.0",
+    "sphinx>=9.1.0",
+]
+
+[tool.poe]
+include = "poe_tasks.toml"

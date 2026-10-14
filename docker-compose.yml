@@ -1,0 +1,99 @@
+# Environnement de l'agent : proxy sortant restreint, juge (poe check) et conteneur agent.
+# Lancer : docker compose run --rm agent
+name: welleat-api-sdk-agent
+
+x-sandbox: &sandbox
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
+x-proxy-env: &proxy-env
+  HTTP_PROXY: http://proxy:3128
+  HTTPS_PROXY: http://proxy:3128
+  http_proxy: http://proxy:3128
+  https_proxy: http://proxy:3128
+  NO_PROXY: judge,proxy,localhost,127.0.0.1
+  no_proxy: judge,proxy,localhost,127.0.0.1
+
+services:
+  proxy:
+    <<: *sandbox
+    build: ./docker/proxy
+    restart: unless-stopped
+    networks: [internal, egress]
+    volumes:
+      - ./docker/proxy/allowed_hosts.txt:/etc/squid/allowed_hosts.txt:ro
+
+  judge:
+    <<: *sandbox
+    build:
+      context: ./docker/judge
+      args:
+        AGENT_UID: ${AGENT_UID:-1000}
+    restart: unless-stopped
+    networks: [internal]  # aucun port publié : joignable uniquement par l'agent
+    depends_on: [proxy]
+    environment:
+      <<: *proxy-env
+    volumes:
+      - .:/workspace:ro
+      - judge-cache:/var/cache/judge
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8080/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  agent:
+    <<: *sandbox
+    build:
+      context: ./docker/agent
+      args:
+        AGENT_UID: ${AGENT_UID:-1000}
+    networks: [internal]  # pas de route directe vers Internet : tout passe par le proxy
+    depends_on:
+      judge:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    environment:
+      <<: *proxy-env
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+      JUDGE_URL: http://judge:8080
+      GIT_AUTHOR_NAME: "Louis A."
+      GIT_AUTHOR_EMAIL: "larcelon@proton.me"
+      GIT_COMMITTER_NAME: "Louis A."
+      GIT_COMMITTER_EMAIL: "larcelon@proton.me"
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: "*"
+    volumes:
+      - .:/workspace
+      # Contrôles et configuration : lecture seule pour l'agent (créés par copier et `uv sync`).
+      - ./.claude:/workspace/.claude:ro
+      - ./CLAUDE.md:/workspace/CLAUDE.md:ro
+      - ./ruff.toml:/workspace/ruff.toml:ro
+      - ./mypy.ini:/workspace/mypy.ini:ro
+      - ./pytest.ini:/workspace/pytest.ini:ro
+      - ./poe_tasks.toml:/workspace/poe_tasks.toml:ro
+      - ./scripts:/workspace/scripts:ro
+      - ./.pre-commit-config.yaml:/workspace/.pre-commit-config.yaml:ro
+      - ./.secrets.baseline:/workspace/.secrets.baseline:ro
+      - ./docker-compose.yml:/workspace/docker-compose.yml:ro
+      - ./docker:/workspace/docker:ro
+      # Hooks git : celui du dépôt est remplacé par un hook qui interroge le juge.
+      - ./docker/hooks:/workspace/.git/hooks:ro
+      - ./.git/config:/workspace/.git/config:ro
+      - claude-home:/home/agent/.claude
+      - agent-cache:/home/agent/.cache
+
+networks:
+  internal:
+    internal: true  # sans accès externe
+  egress: {}
+
+volumes:
+  judge-cache:
+  claude-home:
+  agent-cache:

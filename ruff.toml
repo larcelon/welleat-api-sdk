@@ -1,0 +1,40 @@
+target-version = "py312"
+line-length = 100
+preview = true   # requis pour les règles DOC (pydoclint)
+src = [".", "src"]
+
+[lint]
+select = [
+  "ANN",            # annotations obligatoires, ANN401 interdit Any
+  "PGH", "RUF100",  # type: ignore / noqa sans code ou inutiles
+  "UP", "TC", "FA", "PYI",
+  "D",              # docstrings (pydocstyle)
+  "DOC",            # cohérence docstring/signature
+  "TID",            # imports interdits (cast, Any, pytest.mark.skip)
+  "C90",            # complexité cyclomatique
+  "B", "SIM", "I", "E", "F", "W", "C4", "PT", "S", "N", "PL", "RUF",
+]
+explicit-preview-rules = true
+extend-select = ["DOC201", "DOC402", "DOC501", "DOC502", "D417"]
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.flake8-tidy-imports.banned-api]
+"typing.cast".msg = "cast() contourne le typage : corriger le type plutôt que le masquer."
+"typing.Any".msg = "Any est interdit : utiliser un type précis."
+"pytest.mark.skip".msg = "Un test ignoré cache un défaut : le corriger ou le supprimer, ou utiliser skipif avec reason."
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.flake8-annotations]
+allow-star-arg-any = false
+mypy-init-return = true
+
+[lint.flake8-type-checking]
+strict = true
+
+[lint.per-file-ignores]
+"**/tests/**" = ["D", "DOC", "S101", "ANN401", "PLR2004"]
+"docs/**" = ["D", "ANN", "INP001"]

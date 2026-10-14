@@ -1,0 +1,9 @@
+# Modifié par copier : ne pas éditer à la main
+_commit: latest-2-g4ef38a2
+_src_path: gh:larcelon/welleat-agentic-template
+author_email: larcelon@proton.me
+author_name: Louis A.
+description: Module Python servant de wrapper à l'API Welleat. Elle est utile à l'implémentation
+    des applications de la flotte IoT.
+project_name: welleat-api-sdk
+python_version: '3.12'

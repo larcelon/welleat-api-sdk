@@ -1,0 +1,3 @@
+#!/bin/sh
+# Monté en lecture seule sur .git/hooks dans le conteneur agent : le commit exige l'accord du juge.
+exec ask-judge --index

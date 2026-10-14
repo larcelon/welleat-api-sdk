@@ -1,0 +1,14 @@
+[tool.poe.tasks]
+lint = "ruff check ."
+format = "ruff format --check ."
+typecheck = "mypy ."
+test = "pytest"
+suppressions = "python -m scripts.check_suppressions"
+audit = "pip-audit"
+docs = "sphinx-build -W --keep-going -b html docs docs/_build"
+
+[tool.poe.tasks.secrets]
+shell = "git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline"
+
+[tool.poe.tasks.check]
+sequence = ["lint", "format", "typecheck", "suppressions", "secrets", "test"]
