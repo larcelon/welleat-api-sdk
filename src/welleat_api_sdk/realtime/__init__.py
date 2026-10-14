@@ -5,11 +5,11 @@ Nécessite l'extra `realtime` (`pip install welleat-api-sdk[realtime]`).
 sockets génériques `RealtimeSocket` / `SyncRealtimeSocket`.
 """
 
+from welleat_api_sdk.models import DeviceId
 from welleat_api_sdk.realtime.cameras import CameraSocket, SyncCameraSocket
 from welleat_api_sdk.realtime.client import RealtimeSocket, ReconnectPolicy, SyncRealtimeSocket
 from welleat_api_sdk.realtime.events import (
     CameraEvent,
-    DeviceId,
     ManualCaptureRequest,
     PlugCommand,
     ScaleCommand,

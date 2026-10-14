@@ -15,10 +15,8 @@ from typing import Self
 
 from welleat_api_sdk._json import as_object
 from welleat_api_sdk.errors import ResponseFormatError
+from welleat_api_sdk.models import DeviceId
 from welleat_api_sdk.request import JsonValue
-
-type DeviceId = str | int
-"""Identifiant à type mixte (`TabletId`, `scaleId`, `apiPlugId`)."""
 
 SCALE_NOT_REGISTERED = "Scale not registered to this station"
 """Message de refus des poids d'une balance non rattachée (comparé sans casse)."""

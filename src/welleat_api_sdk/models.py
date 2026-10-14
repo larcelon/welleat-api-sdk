@@ -21,7 +21,7 @@ from welleat_api_sdk.errors import ResponseFormatError
 from welleat_api_sdk.request import JsonValue
 
 type DeviceId = str | int
-"""Identifiant à type mixte côté back-end (`apiPlugId`...), renvoyé tel que reçu."""
+"""Identifiant à type mixte (`apiPlugId`, `TabletId`, `scaleId`), renvoyé tel que reçu."""
 
 _BBOX_SIZE = 4
 
