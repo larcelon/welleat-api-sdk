@@ -23,13 +23,60 @@ async with CameraClient(
 | `camera_requests`, `gateway_requests` | constructeurs de `Request`, un par endpoint |
 | `cameras`, `gateways` | `CameraClient`, `GatewayClient` et variantes `Sync*` |
 | `models`, `errors` | dataclasses frozen avec parsing validé ; hiérarchie `WelleatError` |
+| `outbox` | `Outbox` / `SyncOutbox` (file durable des envois en échec, format camera-soft `schema_version: 2`), `OutboxPolicy`, `DailyTrayCounter` |
+| `realtime` | canal Socket.IO (extra `realtime`) : `CameraSocket`, `GatewaySocket` et variantes `Sync*`, `ReconnectPolicy`, événements typés |
+
+
+## Outbox
+
+```python
+from welleat_api_sdk.models import FramePayload
+from welleat_api_sdk.outbox import SyncOutbox
+
+outbox = SyncOutbox("/var/lib/welleat/outbox")  # retry 20 min, péremption 7 j, blackout 10:30-15:00
+
+
+def send(payload: dict) -> None:
+    cam.send_frame(FramePayload.from_json(payload))
+
+
+outbox.deliver(frame.to_json(), send)  # en file si échec ; 1 rejeu tous les 10 succès
+outbox.retry_due(send)  # périodes creuses
+```
+
+## Temps réel (Socket.IO)
+
+Installer l'extra : `pip install "welleat-api-sdk[realtime]"`.
+
+```python
+from welleat_api_sdk import ClientConfig, GatewayCredentials
+from welleat_api_sdk.realtime import GatewaySocket, ScaleCommand
+
+socket = GatewaySocket(GatewayCredentials("station", "clé"), ClientConfig())
+
+
+async def on_command(command: ScaleCommand) -> None: ...
+
+
+async def restart_service() -> None: ...
+
+
+socket.on_scale_command(on_command)
+socket.on_give_up(restart_service)  # 6 échecs consécutifs par défaut
+await socket.run()  # reconnecte selon la ReconnectPolicy jusqu'à stop()
+```
+
+Le SDK décode les charges utiles (objet ou chaîne JSON), distingue accusés de poids et retours de
+commande, et reconnecte ; le suivi de livraison des poids et le redémarrage du service restent à
+l'appelant, via les hooks `on_connect`, `on_disconnect`, `on_connect_error` et `on_give_up`.
 
 ## Principes
 
-- Le client lève, ne réessaie jamais (`RetryableError` signale les erreurs rejouables) ; l'outbox est hors SDK.
+- Le client lève, ne réessaie jamais (`RetryableError` signale les erreurs rejouables) ; l'outbox optionnelle (`outbox`) replanifie.
+- `ApiError.error_message` expose le message d'un corps `{ "error": "…" }`, seule forme d'erreur du back-end ; `body` garde le texte brut.
 - Aucun secret ni fichier lu/écrit : l'enrôlement renvoie les credentials, l'appelant les stocke.
 - Les chemins conservent la casse du back-end (`temptracking`, `Reports`, `StateUpdate`...).
 
 ## Hors périmètre de cette base
 
-Socket.IO (`realtime`), outbox, bornes/RFID (`api-local.mdev.fr`), export quotidien (contrat non défini).
+Bornes/RFID (`api-local.mdev.fr`), export quotidien (contrat non défini).

@@ -10,6 +10,11 @@ dependencies = [
     "httpx>=0.28.1",
 ]
 
+[project.optional-dependencies]
+realtime = [
+    "python-socketio[asyncio-client,client]>=5.17",
+]
+
 [build-system]
 requires = ["uv_build>=0.12.23,<0.13.0"]
 build-backend = "uv_build"
@@ -24,6 +29,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.16.0",
+    "python-socketio[asyncio-client,client]>=5.17",
     "ruff>=0.17.0",
     "sphinx>=9.1.0",
 ]

@@ -36,14 +36,23 @@ class ClientConfig:
         base_url: Base d'URL (incluant `/api`) remplaçant celle de `environment`.
         timeouts: Délais par défaut, surchargeables par appel.
         user_agent: Valeur de l'en-tête `User-Agent`.
+        realtime_url: URL du serveur Socket.IO remplaçant celle déduite de la base REST.
     """
 
     environment: Environment = Environment.PRODUCTION
     base_url: str | None = None
     timeouts: Timeouts = Timeouts()
     user_agent: str = "welleat-api-sdk/0.1"
+    realtime_url: str | None = None
 
     @property
     def api_base_url(self) -> str:
         """Base d'URL REST unique, sans barre oblique finale."""
         return (self.base_url or self.environment.value).rstrip("/")
+
+    @property
+    def realtime_base_url(self) -> str:
+        """URL du serveur Socket.IO, soit `realtime_url`, soit la base REST sans `/api`."""
+        if self.realtime_url:
+            return self.realtime_url.rstrip("/")
+        return self.api_base_url.removesuffix("/api")
