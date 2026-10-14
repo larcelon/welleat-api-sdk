@@ -27,6 +27,7 @@ async with CameraClient(
 ## Principes
 
 - Le client lève, ne réessaie jamais (`RetryableError` signale les erreurs rejouables) ; l'outbox est hors SDK.
+- `ApiError.error_message` expose le message d'un corps `{ "error": "…" }`, seule forme d'erreur du back-end ; `body` garde le texte brut.
 - Aucun secret ni fichier lu/écrit : l'enrôlement renvoie les credentials, l'appelant les stocke.
 - Les chemins conservent la casse du back-end (`temptracking`, `Reports`, `StateUpdate`...).
 

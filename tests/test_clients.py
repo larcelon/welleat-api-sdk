@@ -195,6 +195,24 @@ def test_error_statuses(status: int, error: type[ApiError]) -> None:
         camera(Recorder(httpx.Response(status, text="x"))).report(ReportPayload(None, 1))
 
 
+@pytest.mark.parametrize("status", [400, 500])
+def test_error_body_message_is_extracted(status: int) -> None:
+    response = httpx.Response(status, json={"error": "Camera not found"})
+    with pytest.raises(ApiError) as info:
+        camera(Recorder(response)).report(ReportPayload(None, 1))
+    assert info.value.error_message == "Camera not found"
+    assert str(info.value) == f"HTTP {status} : Camera not found"
+    assert info.value.body == '{"error":"Camera not found"}'
+
+
+@pytest.mark.parametrize("body", ["<html>oops</html>", "[]", '{"error": 3}', '{"error": ""}', ""])
+def test_other_error_bodies_keep_the_raw_text(body: str) -> None:
+    with pytest.raises(ApiError) as info:
+        camera(Recorder(httpx.Response(400, text=body))).report(ReportPayload(None, 1))
+    assert info.value.error_message is None
+    assert str(info.value) == f"HTTP 400 : {body}"
+
+
 def test_transport_failure_is_network_error() -> None:
     def boom(_request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectTimeout("slow")
