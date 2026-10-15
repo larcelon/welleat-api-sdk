@@ -1,6 +1,6 @@
 [project]
 name = "welleat-api-sdk"
-version = "0.1.0"
+version = "0.2.0"
 description = "Module Python servant de wrapper à l'API Welleat. Elle est utile à l'implémentation des applications de la flotte IoT."
 authors = [
     { name = "Louis A.", email = "larcelon@proton.me" }

@@ -241,8 +241,8 @@ def task_list(api_sensor_id: str) -> Request[object]:
     """Tâches d'un capteur (`GET dataAccess/sensors/taskList/{apiSensorId}`).
 
     Seul endpoint hors `/stations` et `/cameras`. Le contrat n'est pas observé :
-    la réponse JSON est renvoyée telle quelle, et le mode d'authentification
-    (`api-key` seul) reste à confirmer avec le back-end.
+    la réponse JSON est renvoyée telle quelle. Authentification par en-têtes
+    `api-key` et `apiStationId`, comme le legacy.
 
     Args:
         api_sensor_id: Identifiant de capteur.
@@ -254,7 +254,7 @@ def task_list(api_sensor_id: str) -> Request[object]:
         "GET",
         f"dataAccess/sensors/taskList/{quote(api_sensor_id, safe='')}",
         lambda reply: reply.json(),
-        AuthMode.KEY_HEADER,
+        AuthMode.IDENTITY_HEADER,
     )
 
 

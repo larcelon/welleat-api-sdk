@@ -285,10 +285,12 @@ class ServiceSlot:
             value: Objet `{ServiceSlotId, schedules}`.
 
         Returns:
-            Le créneau.
+            Le créneau ; `schedules` vaut `()` si le créneau n'est pas rempli
+            (`null` ou liste vide).
         """
         data = as_object(value, "ServiceSlot")
-        schedules = as_list(data.get("schedules"), "ServiceSlot.schedules")
+        raw = data.get("schedules")
+        schedules = [] if raw is None else as_list(raw, "ServiceSlot.schedules")
         return cls(
             service_slot_id=as_int(data.get("ServiceSlotId"), "ServiceSlot.ServiceSlotId"),
             schedules=tuple(as_str(item, "ServiceSlot.schedules[]") for item in schedules),
@@ -379,9 +381,9 @@ def _utc_iso(moment: datetime) -> str:
     """Formate une date en ISO-8601 UTC suffixée `Z`.
 
     Returns:
-        Date au format `AAAA-MM-JJTHH:MM:SSZ`.
+        Date au format `AAAA-MM-JJTHH:MM:SS[.ffffff]Z` (microsecondes si non nulles).
     """
-    return moment.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return moment.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 @dataclass(frozen=True, slots=True)

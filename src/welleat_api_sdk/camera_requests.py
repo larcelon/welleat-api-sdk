@@ -240,14 +240,15 @@ def speed_perf(bytes_per_second: int) -> Request[None]:
 
 
 def _parse_service_slots(reply: Reply) -> list[ServiceSlot]:
-    """Lit un objet ou une liste d'objets `ServiceSlot`.
+    """Lit un objet ou une liste d'objets `ServiceSlot`, sans les créneaux non remplis.
 
     Returns:
-        Créneaux de service lus dans la réponse.
+        Créneaux de service dont `schedules` est non vide.
     """
     value = reply.json()
     items = as_list(value, "ServiceSlots") if isinstance(value, list) else [value]
-    return [ServiceSlot.from_json(item) for item in items]
+    slots = [ServiceSlot.from_json(item) for item in items]
+    return [slot for slot in slots if slot.schedules]
 
 
 def service_slots() -> Request[list[ServiceSlot]]:

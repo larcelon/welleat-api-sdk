@@ -169,6 +169,32 @@ def test_service_slots_accept_object_or_list(payload: object) -> None:
     assert [(s.service_slot_id, s.schedules) for s in slots] == [(12, ("11:00", "15:00"))]
 
 
+def test_service_slots_skip_unfilled_slots() -> None:
+    payload = [
+        {"ServiceSlotId": 1, "schedules": ["11:00", "15:00"]},
+        {"ServiceSlotId": 2, "schedules": None},
+        {"ServiceSlotId": "3", "schedules": []},
+    ]
+    slots = camera(Recorder(httpx.Response(200, json=payload))).service_slots()
+    assert [(s.service_slot_id, s.schedules) for s in slots] == [(1, ("11:00", "15:00"))]
+    assert camera(Recorder(httpx.Response(200, json=[]))).service_slots() == []
+    single = {"ServiceSlotId": 2, "schedules": None}
+    assert camera(Recorder(httpx.Response(200, json=single))).service_slots() == []
+
+
+def test_service_slots_reject_non_list_schedules() -> None:
+    reply = httpx.Response(200, json={"ServiceSlotId": 1, "schedules": "11:00"})
+    with pytest.raises(ResponseFormatError):
+        camera(Recorder(reply)).service_slots()
+
+
+def test_sensor_reading_date_keeps_microseconds() -> None:
+    precise = SensorReading("s1", 4.2, datetime(2026, 10, 14, 10, 0, 0, 123456, tzinfo=UTC), 87)
+    plain = SensorReading("s1", 4.2, datetime(2026, 10, 14, 10, tzinfo=UTC), 87)
+    assert precise.to_json()["date"] == "2026-10-14T10:00:00.123456Z"
+    assert plain.to_json()["date"] == "2026-10-14T10:00:00Z"
+
+
 def test_service_slots_reject_boolean_id() -> None:
     reply = httpx.Response(200, json={"ServiceSlotId": True, "schedules": []})
     with pytest.raises(ResponseFormatError):
@@ -314,7 +340,10 @@ def test_plug_list_and_ignored_sensors() -> None:
 def test_add_new_station_and_task_list() -> None:
     rec = Recorder(httpx.Response(200, json={"apiStationId": "s", "api_key": "k"}))
     assert gateway(rec, None).add_new_station(SECRETS, DEVICE) == GatewayCredentials("s", "k")
-    assert gateway(Recorder(httpx.Response(200, json=[1]))).task_list("a/b") == [1]
+    task_rec = Recorder(httpx.Response(200, json=[1]))
+    assert gateway(task_rec).task_list("a/b") == [1]
+    assert task_rec.last.headers["api-key"] == "k-st"
+    assert task_rec.last.headers["apiStationId"] == STATION.api_station_id
 
 
 def test_async_client_shares_the_same_contract() -> None:
