@@ -6,6 +6,7 @@ from welleat_api_sdk import camera_requests as req
 from welleat_api_sdk.auth import CameraCredentials, EnrollmentSecrets
 from welleat_api_sdk.client import SyncWelleatClient, WelleatClient
 from welleat_api_sdk.models import (
+    CameraState,
     ChefFramePayload,
     DeviceInfo,
     FramePayload,
@@ -80,13 +81,13 @@ class CameraClient(WelleatClient[CameraCredentials]):
         """
         await self.request(req.temp_tracking(temperature, soft_version))
 
-    async def state_update(self, active: bool) -> None:
-        """Signale si la caméra est dans un créneau de service.
+    async def state_update(self, state: CameraState | bool) -> None:
+        """Signale l'état de service de la caméra.
 
         Args:
-            active: `True` dans un créneau.
+            state: `CameraState`, ou `bool` (`True` → `SEGMENT`, `False` → `OFF`).
         """
-        await self.request(req.state_update(active))
+        await self.request(req.state_update(state))
 
     async def speed_perf(self, bytes_per_second: int) -> None:
         """Envoie le débit réseau mesuré.
@@ -170,13 +171,13 @@ class SyncCameraClient(SyncWelleatClient[CameraCredentials]):
         """
         self.request(req.temp_tracking(temperature, soft_version))
 
-    def state_update(self, active: bool) -> None:
-        """Signale le créneau de service ; voir `CameraClient.state_update`.
+    def state_update(self, state: CameraState | bool) -> None:
+        """Signale l'état de service ; voir `CameraClient.state_update`.
 
         Args:
-            active: `True` dans un créneau.
+            state: `CameraState`, ou `bool` (`True` → `SEGMENT`, `False` → `OFF`).
         """
-        self.request(req.state_update(active))
+        self.request(req.state_update(state))
 
     def speed_perf(self, bytes_per_second: int) -> None:
         """Envoie le débit mesuré ; voir `CameraClient.speed_perf`.

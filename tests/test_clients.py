@@ -11,6 +11,7 @@ from welleat_api_sdk import (
     ApiError,
     CameraClient,
     CameraCredentials,
+    CameraState,
     ClientConfig,
     EnrollmentSecrets,
     Environment,
@@ -33,6 +34,7 @@ from welleat_api_sdk.models import (
     ReportPayload,
     ScaleRegistration,
     SensorReading,
+    SensorStat,
 )
 
 CAMERA = CameraCredentials("cam 1", "k-cam")
@@ -363,3 +365,77 @@ def test_custom_base_url_and_secret_masking() -> None:
     assert ClientConfig(base_url="http://x/api/").api_base_url == "http://x/api"
     assert "k-cam" not in repr(CAMERA)
     assert "global-secret" not in repr(SECRETS)
+
+
+@pytest.mark.parametrize(
+    ("state", "expected"),
+    [
+        (CameraState.CHEF, 2),
+        (CameraState.SEGMENT, 1),
+        (CameraState.OFF, 0),
+        (True, 1),
+        (False, 0),
+    ],
+)
+@pytest.mark.parametrize("status", [200, 201, 204])
+def test_state_update_sends_the_state_value(
+    state: CameraState | bool, expected: int, status: int
+) -> None:
+    rec = Recorder(httpx.Response(status))
+    camera(rec).state_update(state)
+    assert (rec.last.method, rec.last.url.raw_path.decode()) == (
+        "PUT",
+        "/api/cameras/StateUpdate/cam%201",
+    )
+    assert rec.last.headers["api-key"] == "k-cam"
+    assert rec.body() == {"state": expected}
+
+
+@pytest.mark.parametrize("state", [3, "1", None, 1.0])
+def test_state_update_rejects_other_values_without_request(state: object) -> None:
+    rec = Recorder()
+    client = camera(rec)
+    with pytest.raises(TypeError):
+        client.state_update(state)  # type: ignore[arg-type]  # valeur invalide volontaire
+    assert rec.requests == []
+
+
+def test_state_update_server_error_and_async() -> None:
+    with pytest.raises(ServerError):
+        camera(Recorder(httpx.Response(500))).state_update(CameraState.CHEF)
+    rec = Recorder(httpx.Response(204))
+
+    async def run() -> None:
+        http = httpx.AsyncClient(transport=httpx.MockTransport(rec))
+        async with CameraClient(ClientConfig(), CAMERA, http=http) as client:
+            await client.state_update(CameraState.CHEF)
+        await http.aclose()
+
+    asyncio.run(run())
+    assert rec.body() == {"state": 2}
+
+
+def test_sensor_stats_serialize_missing_measures_as_null() -> None:
+    rec = Recorder()
+    gateway(rec).sensor_stats([SensorStat("S1", None, None)])
+    assert rec.body() == {
+        "datas": [
+            {"apiSensorId": "S1", "batteryLevel": None, "wifiSignalDbm": None, "isConnected": True}
+        ]
+    }
+    gateway(rec).sensor_stats([SensorStat("S1", 87, -61)])
+    assert rec.body() == {
+        "datas": [
+            {"apiSensorId": "S1", "batteryLevel": 87, "wifiSignalDbm": -61, "isConnected": True}
+        ]
+    }
+
+
+def test_sensor_reading_keeps_zero_measures() -> None:
+    rec = Recorder()
+    reading = SensorReading("s1", 4.2, datetime(2026, 10, 14, 12, tzinfo=UTC), 0, 0)
+    gateway(rec).send_temperatures([reading], 51.2)
+    datas = rec.body()["datas"]
+    assert isinstance(datas, list)
+    assert datas[0]["batteryLevel"] == 0
+    assert datas[0]["wifiSignalDbm"] == 0

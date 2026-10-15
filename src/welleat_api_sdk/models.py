@@ -7,6 +7,7 @@ Les modèles de requête exposent `to_json()` ; les modèles de réponse exposen
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from enum import IntEnum
 
 from welleat_api_sdk._json import (
     as_bool,
@@ -24,6 +25,20 @@ type DeviceId = str | int
 """Identifiant à type mixte (`apiPlugId`, `TabletId`, `scaleId`), renvoyé tel que reçu."""
 
 _BBOX_SIZE = 4
+
+
+class CameraState(IntEnum):
+    """État de service d'une caméra pour `StateUpdate`.
+
+    Attributes:
+        OFF: Hors créneau de service.
+        SEGMENT: Dans un segment de service.
+        CHEF: Dans la fenêtre CHEF.
+    """
+
+    OFF = 0
+    SEGMENT = 1
+    CHEF = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -428,14 +443,14 @@ class SensorStat:
 
     Attributes:
         api_sensor_id: Identifiant du capteur.
-        battery_level: Niveau de batterie.
-        wifi_signal_dbm: Signal reçu.
+        battery_level: Niveau de batterie, `None` si le capteur n'a pas de mesure.
+        wifi_signal_dbm: Signal reçu, `None` si le capteur n'a pas de mesure.
         is_connected: Capteur connecté.
     """
 
     api_sensor_id: str
-    battery_level: int
-    wifi_signal_dbm: int
+    battery_level: int | None
+    wifi_signal_dbm: int | None
     is_connected: bool = True
 
     def to_json(self) -> dict[str, JsonValue]:

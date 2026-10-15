@@ -12,6 +12,7 @@ from welleat_api_sdk.auth import AuthMode, CameraCredentials, EnrollmentSecrets
 from welleat_api_sdk.config import Timeouts
 from welleat_api_sdk.errors import ApiError, ResponseFormatError
 from welleat_api_sdk.models import (
+    CameraState,
     ChefFramePayload,
     DeviceInfo,
     FramePayload,
@@ -198,21 +199,28 @@ def temp_tracking(temperature: float, soft_version: str | None = None) -> Reques
     )
 
 
-def state_update(active: bool) -> Request[None]:
-    """Signale si la caméra est dans un créneau (`PUT cameras/StateUpdate/{id}`).
+def state_update(state: CameraState | bool) -> Request[None]:
+    """Signale l'état de service de la caméra (`PUT cameras/StateUpdate/{id}`).
 
     Args:
-        active: `True` si l'heure courante est dans un créneau de service.
+        state: `CameraState`, ou `bool` (`True` → `SEGMENT`, `False` → `OFF`).
 
     Returns:
         La requête (204 accepté).
+
+    Raises:
+        TypeError: Si `state` n'est ni un `CameraState` ni un `bool` (par exemple `3` ou `"1"`).
     """
+    received: object = state  # le typage n'empêche pas un appelant dynamique
+    if not isinstance(received, CameraState | bool):
+        msg = f"state doit être un CameraState ou un bool, pas {type(received).__name__}"
+        raise TypeError(msg)
     return Request(
         "PUT",
         "cameras/StateUpdate/{identity}",
         ignore_reply,
         AuthMode.KEY_HEADER,
-        {"state": int(active)},
+        {"state": int(state)},
         _JSON_HEADERS,
         OK_STATUSES | {204},
         Timeouts(connect=3.0, read=10.0),

@@ -104,7 +104,7 @@ Timeouts caméra (envoi images) : total 10 s, connect 3 s, lecture 7 s. Monitori
 | Endpoint | Méthode | Corps | Succès |
 | --- | --- | --- | --- |
 | `/cameras/temptracking/{id}` | POST | `{ "temperature": float (1 déc.), "softVersion"?: "<APP_VERSION>" }` | 200/201 |
-| `/cameras/StateUpdate/{id}` | **PUT** | `{ "state": <0\|1> }` (1 si l'heure courante est dans un `TIMELINE_SEGMENT_1..5`) | 200/201/204 |
+| `/cameras/StateUpdate/{id}` | **PUT** | `{ "state": <0\|1\|2> }` : 2 si l'heure est dans la fenêtre CHEF, 1 si elle est dans un segment de service (`TIMELINE_SEGMENT_1..5`), 0 sinon (SDK : `CameraState.CHEF/SEGMENT/OFF`) | 200/201/204 |
 | `/cameras/SpeedPerfs/{id}` | POST | `{ "speedPerf": int }` (octets/s, mesuré toutes les 3600 s via `speedtest.tele2.net/1MB.zip`) | 200/201 |
 
 Casse à conserver : `temptracking` (minuscules) côté caméra.
@@ -145,8 +145,8 @@ Préfixe `{base}/stations/…` (`base` incluant `/api`).
 
 | Endpoint | Méthode | Corps | Réponse |
 | --- | --- | --- | --- |
-| `/stations/addNewScale/{station}` | POST | `{ "ipAddress": "<ip>", "macAddress": "<MAC ou null>" }` | JSON avec `scaleId` \| `id` \| `_id`, **ou** texte brut = l'identifiant. Idempotent : renvoyer un id connu = IP mise à jour |
-| `/stations/sendWeights/{station}` | POST | `{ "datas": [ { "scaleId", "value": kg, "date": str } ], "speedPerf"?: int }` | 200/201 (code présent mais décrit comme inutilisé : le flux nominal passe par Socket.IO) |
+| `/stations/addNewScale/{station}` | POST | `{ "ipAddress": "<ip>", "macAddress": "<MAC ou null>" }` | JSON avec `scaleId` \| `id` \| `_id`, **ou** texte brut = l'identifiant. Idempotence côté serveur non vérifiée |
+| `/stations/sendWeights/{station}` | POST | `{ "datas": [ { "scaleId", "value": kg, "date": str } ], "speedPerf"?: int }` | 200/201 (défini mais jamais appelé par le legacy) |
 
 `speedPerf` : au plus 1 fois/heure, lu depuis un fichier de vitesse centralisé (validité 7200 s).
 Identifiant balance : MAC si disponible (jamais `00:00:00:00:00:00`, ignoré), sinon IP.
@@ -221,7 +221,7 @@ Connexion : `auth={station_id, api_key}`, `transports=["websocket"]`.
 
 | Sens | Événement | Charge utile |
 | --- | --- | --- |
-| client→serveur | `SCALE_STREAM_WEIGHT_UPDATE` | `{ scaleId, raw_data }` (trame brute, ex. `AW 1.234 T 0.1`) ; émis si poids changé (>0,001) ou 15 s écoulées |
+| client→serveur | `SCALE_STREAM_WEIGHT_UPDATE` | `{ scaleId, raw_data }` (trame brute) ; émis si poids changé (>0,001) ou 15 s écoulées |
 | client→serveur | `SCALE_CONNECTION_STATE` | `{ scaleId, state: 0\|1 }` (uniquement sur transition, uniquement rôle `debarrassage`) |
 | client→serveur | `station-heartbeat` | `{ scales: [ { scaleUuid, connected, streamActive, lastWeightGrams } ], timestamp }` toutes les 5 s |
 | client→serveur | `SCALE_CMD_SUCCESS` | `{ scaleId, original_command, timestamp }` |
@@ -252,13 +252,15 @@ Incohérence de nommage à noter (`PLUG REFRESH DATA` vs `PLUG_CMD_*`) : le SDK 
 | `ReportPayload` | `last_image_date?`, `image_count`, `service_slot_id?` |
 | `ServiceSlot` | `service_slot_id: int`, `schedules: list[str]` |
 | `PlugConfig` | `api_plug_id`, `ip_address`, `name`, `station_plug`, `programmings[]` |
-| `SensorReading` | `api_sensor_id`, `value`, `date` (ISO UTC `Z`), `battery_level?`, `wifi_signal_dbm?` |
+| `SensorReading` | `api_sensor_id`, `value`, `date` (ISO UTC `Z`), `battery_level?`, `wifi_signal_dbm?` (une valeur `0` est envoyée ; seule l'absence `None` omet le champ) |
+| `SensorStat` | `api_sensor_id`, `battery_level: int\|None`, `wifi_signal_dbm: int\|None` (`null` sérialisé tel quel), `is_connected = true` |
+| `CameraState` | `OFF = 0`, `SEGMENT = 1`, `CHEF = 2` |
 | `WeightReading` | `scale_id`, `value`, `date` |
 | `ManualCaptureRequest` | `tablet_id` (clé `TabletId` ou `tablet_id`) |
 
 ## 8. Incohérences et risques à traiter dans le SDK
 
-1. **Authentification hétérogène** : `api-key` en en-tête, `api_key` dans le corps, ou les deux ; `cameraId` en en-tête (borne) ou en corps. Le SDK devrait masquer cela par client (`CameraClient`, `StationClient`) sans changer ce que le back accepte.
+1. **Authentification hétérogène** : `api-key` en en-tête, `api_key` dans le corps, ou les deux ; `cameraId` en en-tête (borne) ou en corps. Le SDK masque cela par client (`CameraClient`, `GatewayClient`) sans changer ce que le back accepte.
 2. **Casse des chemins** : `temptracking` (caméra) vs `tempTracking` (station), `Reports`, `StateUpdate`, `SpeedPerfs`, `ServiceSlots` en PascalCase. À conserver strictement.
 3. **Verbes** : `StateUpdate`, `plugStatus`, `plugConsumption` en **PUT** ; le reste en POST/GET.
 4. **Succès de `trayCount`** dépend d'un texte (`Count save`), pas d'un schéma JSON.

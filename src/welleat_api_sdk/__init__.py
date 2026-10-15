@@ -25,6 +25,7 @@ from welleat_api_sdk.errors import (
     WelleatError,
 )
 from welleat_api_sdk.gateways import GatewayClient, SyncGatewayClient
+from welleat_api_sdk.models import CameraState
 from welleat_api_sdk.request import Reply, Request
 
 __all__ = [
@@ -32,6 +33,7 @@ __all__ = [
     "AuthMode",
     "CameraClient",
     "CameraCredentials",
+    "CameraState",
     "ClientConfig",
     "Credentials",
     "EnrollmentSecrets",

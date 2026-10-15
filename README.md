@@ -8,9 +8,9 @@ SDK Python de l'API Welleat, issu de la rétro-ingénierie de `camera-soft`
 Le SDK n'est pas publié sur PyPI : on l'installe depuis ce dépôt Git, épinglé sur un tag.
 
 ```bash
-uv add "welleat-api-sdk @ git+https://github.com/larcelon/welleat-api-sdk.git" --tag v0.1.0
+uv add "welleat-api-sdk @ git+https://github.com/larcelon/welleat-api-sdk.git" --tag v0.3.0
 # avec le canal temps réel (Socket.IO) :
-uv add "welleat-api-sdk[realtime] @ git+https://github.com/larcelon/welleat-api-sdk.git" --tag v0.1.0
+uv add "welleat-api-sdk[realtime] @ git+https://github.com/larcelon/welleat-api-sdk.git" --tag v0.3.0
 ```
 
 ce qui écrit dans le `pyproject.toml` du projet :
@@ -20,10 +20,10 @@ ce qui écrit dans le `pyproject.toml` du projet :
 dependencies = ["welleat-api-sdk[realtime]"]
 
 [tool.uv.sources]
-welleat-api-sdk = { git = "https://github.com/larcelon/welleat-api-sdk.git", tag = "v0.1.0" }
+welleat-api-sdk = { git = "https://github.com/larcelon/welleat-api-sdk.git", tag = "v0.3.0" }
 ```
 
-- Sans uv : `"welleat-api-sdk[realtime] @ git+https://github.com/larcelon/welleat-api-sdk.git@v0.1.0"`
+- Sans uv : `"welleat-api-sdk[realtime] @ git+https://github.com/larcelon/welleat-api-sdk.git@v0.3.0"`
   dans `dependencies`.
 - Dépôt privé : `git+ssh://git@github.com/larcelon/welleat-api-sdk.git` avec une clé de
   déploiement ; ne jamais écrire de jeton dans le `pyproject.toml`.
